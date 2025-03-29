@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="static/styles.css">
+    </head>
+    <body onload="onLoad()">
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <div class="centered flexible">
+            <div class="left aligned column">
+                <div class="row">
+                    <p>Alabama Corpus Search</p>
+                </div>
+                <div class="row">
+                    <input id="mode" value="list" class="hidden">
+                </div>
+                <div class="row" style="display:block">
+                    <div class="huge" style="display: flex;">
+                        <button id="language" value="Akz" style="width:50px" onclick="switchLanguage()">
+                            Akz
+                        </button>
+                        <input id="searchBar" class="search-bar" type="text" placeholder="Search the Corpus for any string" oninput="" autocomplete="off">
+                        <i id="clear" class="icon" style="cursor: pointer; margin-left: -45px" aria-hidden="true" onclick="clearInput(event)">&times;</i>
+                        <button onclick="searchCorpus(document.getElementById('mode').value)" class="selected" id="enter">Search</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div style="margin-top: 3px;">
+                        <div class="button-row">
+                            <button id="lh" value="ɬ" onclick="addToSearch('ɬ');" class="char">ɬ</button>
+                            <button id="á" value="á" onclick="addToSearch('á');" class="char">á</button>
+                            <button id="à" value="à" onclick="addToSearch('à');" class="char">à</button>
+                            <button id="ó" onclick="addToSearch('ó');" class="char">ó</button>
+                            <button id="ò" onclick="addToSearch('ò');" class="char">ò</button>
+                            <button id="í" onclick="addToSearch('í');" class="char">í</button>
+                            <button id="ì" onclick="addToSearch('ì');" class="char">ì</button>
+                            <button id="ì" onclick="addToSearch('ⁿ');" class="char">◌ⁿ</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="display:inline-block" id="out"></div>
+            </div>
+        </div>
+        <script>
+            const txt_files = [
+                "./files/alabama-choctaw-wars.txt",
+                "./files/early-alabamas.txt",
+                "./files/kingfisher.txt"
+            ]
+            function addToSearch(char) {
+                document.getElementById('searchBar').value = document.getElementById('searchBar').value + char;
+            }
+            function clearInput(event) {
+                event.preventDefault();
+                document.getElementById('searchBar').value = "";
+                document.getElementById('searchWords').innerHTML = "";
+                shown = 0;
+            }
+            function switchLanguage() {
+                var lang = document.getElementById('language');
+                if (lang.value == "Akz") {
+                    lang.value = "En";
+                    lang.innerHTML = "En"
+                }
+                else {
+                    lang.value = "Akz";
+                    lang.innerHTML = "Akz"
+                }
+            }
+            function onLoad() {
+                var out = document.getElementById('out')
+                out.innerHTML = `<div class="info">
+                    <h4>Welcome to the Alabama Corpus Website.</h4> 
+                    </div>`;
+            }
+            async function searchCorpus(mode) {
+                var out = document.getElementById('out')
+                switch(mode) {
+                    case "list":
+                        var input = await searchFiles(document.getElementById('searchBar').value)
+                        console.log(input)
+                        var searchResults = ``;
+                        for (let i = 0; i < input.length; i++) {
+                            var sent = `<em>` + input[i].context + `</em>`
+                            sent = sent.replaceAll(input[i].string, `<b>` + input[i].string + `</b>`)
+                            searchResults += `<div class="info">` +  sent + `<div class="ui-divider"></div>` + input[i].corresponding + `
+                                </div>`
+                                ;
+                        }
+                        out.innerHTML = searchResults;
+                        break;
+                    default:
+                        out.innerHTML = `<div class="info">
+                            <h4>Welcome to the Alabama Corpus Website.</h4> 
+                        </div>`
+                }
+            }
+                async function searchFiles(str) {
+                    const results = [];
+
+                    const fetches = txt_files.map(async (file) => {
+                        try {
+                            const response = await fetch(file);
+                            if (!response.ok) throw new Error(`Failed to load ${file}`);
+                                const text = await response.text();
+
+                                const lines = text.split('\n');
+
+                                lines.forEach((line, i) => {
+                                    if (line.includes(str)) {
+                                        const words = line.split(/\s+/);
+                                        const fullWord = words.find(word => word.includes(str)) || '';
+                                        results.push({
+                                            file: file,
+                                            string: str,
+                                            'full-word': fullWord,
+                                            context: line.trim(),
+                                            corresponding: lines[i + 1]?.trim() || ''
+                                        });
+                                    }
+                                });
+                        } catch (error) {
+                            console.error(`Error with file ${file}:`, error);
+                        }
+                    });
+                    await Promise.all(fetches);
+                    return results
+                }
+        </script>
+    </body>
+</html>
