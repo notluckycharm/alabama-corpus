@@ -55,7 +55,12 @@
             const txt_files = [
                 "./files/alabama-choctaw-wars.txt",
                 "./files/early-alabamas.txt",
-                "./files/kingfisher.txt"
+                "./files/kingfisher.txt",
+                "./files/frybread.txt",
+                "./files/itsy-bitsy-spider.txt",
+                "./files/ghost-story.txt",
+                "./files/belts-and-quilts.txt",
+                "files/dictionary-sentences.txt"
             ]
             function addToSearch(char) {
                 document.getElementById('searchBar').value = document.getElementById('searchBar').value + char;
@@ -87,14 +92,14 @@
                 var out = document.getElementById('out')
                 switch(mode) {
                     case "list":
-                        var input = await searchFiles(document.getElementById('searchBar').value)
+                        var input = await searchFiles(document.getElementById('searchBar').value.toLowerCase())
                         console.log(input)
                         var searchResults = ``;
                         for (let i = 0; i < input.length; i++) {
                             var sent = `<em>` + input[i].context + `</em>`
                             sent = sent.replaceAll(input[i].string, `<b>` + input[i].string + `</b>`)
                             searchResults += `<div class="info">` +  sent + `<div class="ui-divider"></div>` + input[i].corresponding + `
-                                </div>`
+                                <p><i>Source: (` + input[i].file.split('files/')[1] + `)</i></p></div>`
                                 ;
                         }
                         out.innerHTML = searchResults;
@@ -114,18 +119,19 @@
                             if (!response.ok) throw new Error(`Failed to load ${file}`);
                                 const text = await response.text();
 
-                                const lines = text.split('\n');
-
-                                lines.forEach((line, i) => {
-                                    if (line.includes(str)) {
-                                        const words = line.split(/\s+/);
-                                        const fullWord = words.find(word => word.includes(str)) || '';
+                                const pairs = text.split('\n\n');
+                                pairs.forEach((pair, i) => {
+                                    if (pair.toLowerCase().includes(str)) {
+                                        const lines = pair.split('\n')
+                                        const line = lines.findIndex(s => s.toLowerCase().includes(str))
+                                        const words = lines[line].split(/\s+/);
+                                        const fullWord = words.find(word => word.toLowerCase().includes(str)) || '';
                                         results.push({
                                             file: file,
                                             string: str,
                                             'full-word': fullWord,
-                                            context: line.trim(),
-                                            corresponding: lines[i + 1]?.trim() || ''
+                                            context: lines[line].trim(),
+                                            corresponding: lines[line ^ 1]?.trim() || '',
                                         });
                                     }
                                 });
