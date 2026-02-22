@@ -26,8 +26,8 @@
                 </div>
                 <div class="row" style="display:block">
                     <div class="huge" style="display: flex;">
-                        <button id="language" value="Akz" style="width:50px" onclick="switchLanguage()">
-                            Akz
+                        <button id="language" value="Akz/En" style="width:50px" onclick="switchLanguage()">
+                            Akz/En
                         </button>
                         <input id="searchBar" class="search-bar" type="text" placeholder="Search the Corpus for any string" oninput="" autocomplete="off">
                         <i id="clear" class="icon" style="cursor: pointer; margin-left: -45px" aria-hidden="true" onclick="clearInput(event)">&times;</i>
@@ -77,6 +77,10 @@
                     lang.value = "En";
                     lang.innerHTML = "En"
                 }
+                else if (lang.value == "En") {
+                    lang.value = "Akz/En";
+                    lang.innerHTML = "Akz/En";
+                }
                 else {
                     lang.value = "Akz";
                     lang.innerHTML = "Akz"
@@ -120,19 +124,50 @@
                                 const text = await response.text();
 
                                 const pairs = text.split('\n\n');
+                                const lang = document.getElementById('language');
                                 pairs.forEach((pair, i) => {
-                                    if (pair.toLowerCase().includes(str)) {
-                                        const lines = pair.split('\n')
-                                        const line = lines.findIndex(s => s.toLowerCase().includes(str))
-                                        const words = lines[line].split(/\s+/);
-                                        const fullWord = words.find(word => word.toLowerCase().includes(str)) || '';
-                                        results.push({
-                                            file: file,
-                                            string: str,
-                                            'full-word': fullWord,
-                                            context: lines[line].trim(),
-                                            corresponding: lines[line ^ 1]?.trim() || '',
-                                        });
+                                    if (lang.value == "Akz/En") {
+                                        if (pair.toLowerCase().includes(str)) {
+                                            const lines = pair.split('\n')
+                                            const line = lines.findIndex(s => s.toLowerCase().includes(str))
+                                            const words = lines[line].split(/\s+/);
+                                            const fullWord = words.find(word => word.toLowerCase().includes(str)) || '';
+                                            results.push({
+                                                file: file,
+                                                string: str,
+                                                'full-word': fullWord,
+                                                context: lines[line].trim(),
+                                                corresponding: lines[line ^ 1]?.trim() || '',
+                                            });
+                                        }
+                                    }
+                                    else if (lang.value == "Akz") {
+                                        lines = pair.split('\n')
+                                        if (lines[0].toLowerCase().includes(str)) {
+                                            const words = lines[0].split(/\s+/);
+                                            const fullWord = words.find(word => word.toLowerCase().includes(str)) || '';
+                                            results.push({
+                                                file: file,
+                                                string: str,
+                                                'full-word': fullWord,
+                                                context: lines[0].trim(),
+                                                corresponding: lines[1].trim() || '',
+                                            });
+                                        }
+                                    }
+                                    else{
+                                        lines = pair.split('\n')
+                                        if (lines[1].toLowerCase().includes(str)) {
+                                            const words = lines[1].split(/\s+/);
+                                            const fullWord = words.find(word => word.toLowerCase().includes(str)) || '';
+                                            results.push({
+                                                file: file,
+                                                string: str,
+                                                'full-word': fullWord,
+                                                context: lines[1].trim(),
+                                                corresponding: lines[0].trim() || '',
+                                            });
+                                        }
                                     }
                                 });
                         } catch (error) {
